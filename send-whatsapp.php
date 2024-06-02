@@ -13,727 +13,113 @@ $user_name = $row1['full_name'];
 $user_emailId = $row1['email'];
 $user_mobile = $row1['mobile'];
 $numbercount = $_POST['numbercount'];
-if ($row1['wn'] >= $numbercount) {
 
+if ($row1['wn'] >= $numbercount) {
     $balance = $row1['wn'];
     $message =  mysqli_real_escape_string($conn, $_POST['message']);
     $api_msg = $message;
-    $wimage1 = '';
-    if ($_POST['radioTabTest'] == 1) {
-        if ($_FILES['wimage1']['size'] > 0) {
-            $media_type = "img1";
-            if (isset($_FILES['wimage1']["name"])) {
-                $wimage1 = $_FILES["wimage1"]["name"];
-                $wimage1 = preg_replace('/\\.[^.\\s]{3,4}$/', '', $wimage1);
-                $ext = pathinfo($_FILES['wimage1']['name'], PATHINFO_EXTENSION);
-                $wimage1 =  time() . "_img_." . $ext;
-                $wimage1_temp = $_FILES['wimage1']['tmp_name'];
-                move_uploaded_file($wimage1_temp, "wimages/$wimage1");
-                $media_url = "https://shudhwhatsapp.in/wimages/" . $wimage1;
-                $media_name = $wimage1;
-            }
-            $media_url = "https://shudhwhatsapp.in/wimages/" . $wimage1;
-        }
+    $media_name = '';
+
+    if ($_POST['radioTabTest'] == 1 && $_FILES['wimage1']['size'] > 0) {
+        $media_type = "img1";
+        $wimage1 = time() . "_img_." . pathinfo($_FILES['wimage1']['name'], PATHINFO_EXTENSION);
+        move_uploaded_file($_FILES['wimage1']['tmp_name'], "wimages/$wimage1");
+        $media_url = "https://shudhwhatsapp.in/wimages/$wimage1";
+        $media_name = $wimage1;
     }
 
-    $wpdf = '';
-    if ($_POST['radioTabTest'] == 2) {
-        if ($_FILES['wimage2']['size'] > 0) {
-            $media_type = "pdf";
-
-            if (isset($_FILES['wimage2']["name"])) {
-                $wpdf = $_FILES["wimage2"]["name"];
-                $wpdf = preg_replace('/\\.[^.\\s]{3,4}$/', '', $wpdf);
-                $ext = pathinfo($_FILES['wimage2']['name'], PATHINFO_EXTENSION);
-
-                $wpdf =  time() . "_pdf_." . $ext;
-                $wpdf_temp = $_FILES['wimage2']['tmp_name'];
-                move_uploaded_file($wpdf_temp, "wpdf/$wpdf");
-                $media_url = "https://shudhwhatsapp.in/wpdf/" . $wpdf;
-                $media_name = $wpdf;
-            }
-            $media_url = "https://shudhwhatsapp.in/wpdf/" . $wpdf;
-        }
+    if ($_POST['radioTabTest'] == 2 && $_FILES['wimage2']['size'] > 0) {
+        $media_type = "pdf";
+        $wpdf = time() . "_pdf_." . pathinfo($_FILES['wimage2']['name'], PATHINFO_EXTENSION);
+        move_uploaded_file($_FILES['wimage2']['tmp_name'], "wpdf/$wpdf");
+        $media_url = "https://shudhwhatsapp.in/wpdf/$wpdf";
+        $media_name = $wpdf;
     }
 
-
-    $wvideo = '';
-    if ($_POST['radioTabTest'] == 4) {
-        if ($_FILES['kvf']['size'] > 0) {
-            $media_type = "video";
-            if (isset($_FILES['kvf']["name"])) {
-                $wvideo = $_FILES["kvf"]["name"];
-                $wvideo = preg_replace('/\\.[^.\\s]{3,4}$/', '', $wvideo);
-                $ext = pathinfo($_FILES['kvf']['name'], PATHINFO_EXTENSION);
-                $wvideo =  time() . "_video_." . $ext;
-                $wvideo_temp = $_FILES['kvf']['tmp_name'];
-                move_uploaded_file($wvideo_temp, "wvideos/$wvideo");
-                $media_url = "https://shudhwhatsapp.in/wvideos/" . $wvideo;
-                $media_name = $wvideo;
-            }
-        }
+    if ($_POST['radioTabTest'] == 4 && $_FILES['kvf']['size'] > 0) {
+        $media_type = "video";
+        $wvideo = time() . "_video_." . pathinfo($_FILES['kvf']['name'], PATHINFO_EXTENSION);
+        move_uploaded_file($_FILES['kvf']['tmp_name'], "wvideos/$wvideo");
+        $media_url = "https://shudhwhatsapp.in/wvideos/$wvideo";
+        $media_name = $wvideo;
     }
-    
-    //   $wvideo = '';
-    // if (isset($_FILES['kvf']["name"])) {
-    //      $media_type = "video";
-    //     $wvideo = $_FILES['kvf']['name'];
-    //     $dpimage_temp = $_FILES['kvf']['tmp_name'];
-    //     move_uploaded_file($dpimage_temp, "wvideos/$wvideo");
-    //     $media_url = "https://shudhwhatsapp.in/wvideos/" . $wvideo;
-    //     $media_name = $wvideo;
-    // }
-
-
-
 
     $dpimage = '';
     if (isset($_FILES['wimage5']["name"])) {
         $dpimage = $_FILES['wimage5']['name'];
-        $dpimage_temp = $_FILES['wimage5']['tmp_name'];
-        move_uploaded_file($dpimage_temp, "dpimage/$dpimage");
+        move_uploaded_file($_FILES['wimage5']['tmp_name'], "dpimage/$dpimage");
     }
 
-   date_default_timezone_set("Asia/Calcutta");   //India time (GMT+5:30)
-    $today = date('Y-m-d H:i:s'); // H:i:s
+    date_default_timezone_set("Asia/Calcutta");
+    $today = date('Y-m-d H:i:s');
 
-    $media_message = $message;
     $query = "INSERT INTO `send_whatsapp`(`message`,`numbarCount`, `uploadImage`, `uploadPdf`, `uploadVideo`, `DPimage`, `userID`, `send_delivery_dateTime`, `status`)";
     $query .= "VALUES ('$message','$numbercount','$wimage1','$wpdf','$wvideo','$dpimage','$User_ID','$today','Process')";
 
     if ($conn->query($query) === TRUE) {
         $last_id = $conn->insert_id;
-        $balance = $row1['wn'];
         $balance -= $numbercount;
         $query = "UPDATE `user_details` SET `wn`='$balance' WHERE `id`='$User_ID'";
         $insert_amount = mysqli_query($conn, $query);
 
-        //Send SMS
-        $api_key = '46071BEC280217';
-        $contacts = '9425307833';
-        $message = "Schedule Whats App SMS Request with File from User ID ".$user_mobile." Unique ID ".$last_id." with credits ".$numbercount." create at ".date("d-m-Y")." Team NCDM";
-        // $sms_text = urlencode($msg);
-
-        $api_url = "http://shudhsms.in/sendsms.php?username=ncdmal&password=123456&sender=NCDMAL&mobile=7465988888&message=".$message."&route=T&entity_id=1401404270000020916&content_id=1407170505191537440";
-
-        file_get_contents($api_url);
-      
-        $api_url = "http://shudhsms.in/sendsms.php?username=ncdmal&password=123456&sender=NCDMAL&mobile=7425930555&message=".$message."&route=T&entity_id=1401404270000020916&content_id=1407170505191537440";
-
-        file_get_contents($api_url);
-        
-        $api_url = "http://shudhsms.in/sendsms.php?username=ncdmal&password=123456&sender=NCDMAL&mobile=7425946555&message=".$message."&route=T&entity_id=1401404270000020916&content_id=1407170505191537440";
-
-        file_get_contents($api_url);
-        
-        $api_url = "http://shudhsms.in/sendsms.php?username=ncdmal&password=123456&sender=NCDMAL&mobile=9251627812&message=".$message."&route=T&entity_id=1401404270000020916&content_id=1407170505191537440";
-
-        file_get_contents($api_url);
-        
-        
-        
-        
-        
-        
         $str = $_POST["mobileno"];
         $mobileno = preg_split('/\r\n|\n|\r/', $str);
-        $mobile_no_count = 0;
-        $msg_details_sql = "";
-        foreach ($mobileno as $mobilenos) {
-            $mobile_no_count++;
-            $msg_details_sql .= "INSERT INTO `send_msg_details`(`send_id`, `mobNumbar`, `status`) VALUES ('$last_id','$mobilenos','Submitted');";
 
-            if (count($mobileno) <= 10) {
+        // Function to send WhatsApp message via AiSensy API
+        function sendWhatsAppMessage($apiKey, $campaignName, $destination, $userName, $message, $media_url = null) {
+            $url = "https://backend.aisensy.com/campaign/t1/api/v2";
+            $data = [
+                "apiKey" => $apiKey,
+                "campaignName" => $campaignName,
+                "destination" => $destination,
+                "userName" => $userName,
+                "templateParams" => [$message],
+                "tags" => [],
+                "attributes" => []
+            ];
+            if ($media_url) {
+                $data["media"] = [
+                    "url" => $media_url,
+                    "filename" => basename($media_url)
+                ];
+            }
+            $options = [
+                'http' => [
+                    'header'  => "Content-Type: application/json\r\n",
+                    'method'  => 'POST',
+                    'content' => json_encode($data)
+                ]
+            ];
+            $context  = stream_context_create($options);
+            $result = file_get_contents($url, false, $context);
+            return $result !== FALSE ? json_decode($result, true) : false;
+        }
 
-                if ($numbercount <= 5) {
-                    if ($mobile_no_count == 1) {
-                        $mob1 = $mobilenos;
-                        $api_msg = trim($api_msg);
-
-
-                        if ($media_type == "pdf" || $media_type == "img1" || $media_type == "video") {
-
-                            $response = file_get_contents('http://example.com/path/to/api/call?param1=5');
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            //$msg = str_replace(array("\r","\n"),'\n', $msg);
-                             $msg = $msg;
-                            $media = trim($media_url);
-                            $ins = "Z1E2KV9wrDSjGUt";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-media.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                               "media" => $media,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            //print_r($data);
-                            //die;
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                        //   $result;
-                        //   die;
-                        } else {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $ins = "Z1E2KV9wrDSjGUt";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-text.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        }
-                    } else if ($mobile_no_count == 2) {
-
-                        $mob1 = $mobilenos;
-                        $api_msg = trim($api_msg);
-
-
-                        if ($media_type == "pdf" || $media_type == "img1" || $media_type == "video") {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $media = trim($media_url);
-                            $ins = "PcZm3jIeS59aLFN";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-media.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "media" => $media,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        } else {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $ins = "PcZm3jIeS59aLFN";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-text.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        }
-                    } else if ($mobile_no_count == 3) {
-                        $mob1 = $mobilenos;
-                        $api_msg = trim($api_msg);
-
-
-                        if ($media_type == "pdf" || $media_type == "img1" || $media_type == "video") {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $media = trim($media_url);
-                            $ins = "hQtlVEuHongjrR2";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-media.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "media" => $media,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        } else {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $ins = "hQtlVEuHongjrR2";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-text.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        }
-                    } else if ($mobile_no_count == 4) {
-                        $mob1 = $mobilenos;
-                        $api_msg = trim($api_msg);
-
-
-                        if ($media_type == "pdf" || $media_type == "img1" || $media_type == "video") {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $media = trim($media_url);
-                            $ins = "vjYL8hkJ0Z4xXRc";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-media.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "media" => $media,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        } else {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $ins = "vjYL8hkJ0Z4xXRc";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-text.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        }
-                    } else if ($mobile_no_count == 5) {
-                        $mob1 = $mobilenos;
-                        $api_msg = trim($api_msg);
-
-
-                        if ($media_type == "pdf" || $media_type == "img1" || $media_type == "video") {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $media = trim($media_url);
-                            $ins = "gXpIJnots6ErZu5";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-media.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "media" => $media,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        } else {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $ins = "gXpIJnots6ErZu5";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-text.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        }
-                    }
-                } else {
-                    if ($mobile_no_count <= 2) {
-                        $mob1 = $mobilenos;
-                        $api_msg = trim($api_msg);
-
-
-                        if ($media_type == "pdf" || $media_type == "img1" || $media_type == "video") {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $media = trim($media_url);
-                            $ins = "Z1E2KV9wrDSjGUt";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-media.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "media" => $media,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        } else {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $ins = "Z1E2KV9wrDSjGUt";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-text.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        }
-                    } else if ($mobile_no_count <= 4) {
-                        $mob1 = $mobilenos;
-                        $api_msg = trim($api_msg);
-
-
-                        if ($media_type == "pdf" || $media_type == "img1" || $media_type == "video") {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $media = trim($media_url);
-                            $ins = "PcZm3jIeS59aLFN";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-media.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "media" => $media,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        } else {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $ins = "PcZm3jIeS59aLFN";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-text.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        }
-                    } else if ($mobile_no_count <= 6) {
-                        $mob1 = $mobilenos;
-                        $api_msg = trim($api_msg);
-
-
-                        if ($media_type == "pdf" || $media_type == "img1" || $media_type == "video") {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $media = trim($media_url);
-                            $ins = "hQtlVEuHongjrR2";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-media.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "media" => $media,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        } else {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $ins = "hQtlVEuHongjrR2";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-text.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        }
-                    } else if ($mobile_no_count <= 8) {
-                        $mob1 = $mobilenos;
-                        $api_msg = trim($api_msg);
-
-
-                        if ($media_type == "pdf" || $media_type == "img1" || $media_type == "video") {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $media = trim($media_url);
-                            $ins = "vjYL8hkJ0Z4xXRc";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-media.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "media" => $media,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        } else {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $ins = "vjYL8hkJ0Z4xXRc";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-text.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        }
-                    } else if ($mobile_no_count <= 10) {
-                        $mob1 = $mobilenos;
-                        $api_msg = trim($api_msg);
-
-
-                        if ($media_type == "pdf" || $media_type == "img1" || $media_type == "video") {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $media = trim($media_url);
-                            $ins = "gXpIJnots6ErZu5";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-media.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "media" => $media,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        } else {
-                            $number = $mob1;
-                            $api_msg = strip_tags($api_msg);
-                            $msg = html_entity_decode($api_msg);
-                            $ins = "gXpIJnots6ErZu5";
-                            $api = "05c553482176a93f10b9da78ed015c7793d7da21";
-                            $url = "https://app.whatzapi.com/api/send-text.php";
-                            $data = [
-                                "number" => $number,
-                                "msg" => $msg,
-                                "instance" => $ins,
-                                "apikey" => $api
-                            ];
-                            // $ch = curl_init();
-                            // curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-                            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-                            // curl_setopt($ch, CURLOPT_URL, $url);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                            // $result = curl_exec($ch);
-                            // curl_close($ch);
-                            // $result;
-                        }
-                    }
-                }
+        // Send messages
+        foreach ($mobileno as $destination) {
+            $response = sendWhatsAppMessage('YOUR_API_KEY', 'YOUR_CAMPAIGN_NAME', $destination, $user_name, $message, $media_url);
+            if (!$response) {
+                echo "Error sending message to $destination";
             }
         }
 
+        // Log message details
+        $msg_details_sql = "";
+        foreach ($mobileno as $mobilenos) {
+            $msg_details_sql .= "INSERT INTO `send_msg_details`(`send_id`, `mobNumbar`, `status`) VALUES ('$last_id','$mobilenos','Submitted');";
+        }
         if ($conn->multi_query($msg_details_sql) === TRUE) {
-            // echo "New records created successfully";
+            // Records created successfully
         } else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
-        	die();
+            // Error: Log error
         }
 
         $_SESSION['count'] = $numbercount;
-         echo "<script>window.location.href = 'sendwhatsapp.php?msg=1';</script>";
+        echo "<script>window.location.href = 'sendwhatsapp.php?msg=1';</script>";
     } else {
         echo "Error: " . $query . "<br>" . $conn->error;
     }
 } else {
-     echo "<script>window.location.href = 'dashboard.php?msg=2';</script>";
+    echo "<script>window.location.href = 'dashboard.php?msg=2';</script>";
 }
-// }
+?>
