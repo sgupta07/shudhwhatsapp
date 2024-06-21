@@ -26,10 +26,12 @@ if ($row1['wb'] >= $numbercount) {
     $api_msg = $message;
     $media_name = '';
     $media_type = '';
+    $campaignName = '';
 
     // Handle file uploads
     if ($_POST['radioTabTest'] == 1 && $_FILES['wimage1']['size'] > 0) {
         $media_type = "img1";
+        $campaignName = 'ImageCampaign';
         $wimage1 = time() . "_img_." . pathinfo($_FILES['wimage1']['name'], PATHINFO_EXTENSION);
         move_uploaded_file($_FILES['wimage1']['tmp_name'], "wimages/$wimage1");
         $media_url = "https://shudhwhatsapp.in/wimages/$wimage1";
@@ -38,6 +40,7 @@ if ($row1['wb'] >= $numbercount) {
 
     if ($_POST['radioTabTest'] == 2 && $_FILES['wimage2']['size'] > 0) {
         $media_type = "pdf";
+        $campaignName = 'PdfCampaign';
         $wpdf = time() . "_pdf_." . pathinfo($_FILES['wimage2']['name'], PATHINFO_EXTENSION);
         move_uploaded_file($_FILES['wimage2']['tmp_name'], "wpdf/$wpdf");
         $media_url = "https://shudhwhatsapp.in/wpdf/$wpdf";
@@ -46,6 +49,7 @@ if ($row1['wb'] >= $numbercount) {
 
     if ($_POST['radioTabTest'] == 4 && $_FILES['wvideo']['size'] > 0) {
         $media_type = "video";
+        $campaignName = 'VideoCampaign';
         $wvideo = time() . "_video_." . pathinfo($_FILES['wvideo']['name'], PATHINFO_EXTENSION);
         move_uploaded_file($_FILES['wvideo']['tmp_name'], "wvideos/$wvideo");
         $media_url = "https://shudhwhatsapp.in/wvideos/$wvideo";
@@ -119,7 +123,7 @@ if ($row1['wb'] >= $numbercount) {
 
         // Send messages
         foreach ($mobileno as $destination) {
-            $response = sendWhatsAppMessage('YOUR_API_KEY', 'YOUR_CAMPAIGN_NAME', $destination, $user_name, $message, $media_url);
+            $response = sendWhatsAppMessage('your_api_key_here', $campaignName, $destination, $user_name, $message, $media_url);
             if (!$response) {
                 echo "Error sending message to $destination";
             }

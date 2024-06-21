@@ -16,31 +16,38 @@ $numbercount = $_POST['numbercount'];
 
 if ($row1['wn'] >= $numbercount) {
     $balance = $row1['wn'];
-    $message =  mysqli_real_escape_string($conn, $_POST['message']);
+    $message = $_POST['message'];
+    $message = str_replace(array("\r", "\n"), "", $message); // Remove newline characters
+    $message = strip_tags($message); // Strip HTML tags from the message
+    $message = mysqli_real_escape_string($conn, $message); // Escape the message for database insertion
     $api_msg = $message;
     $media_name = '';
-
+    $campaignName = '';
+    // Handle file uploads and set campaign name
     if ($_POST['radioTabTest'] == 1 && $_FILES['wimage1']['size'] > 0) {
         $media_type = "img1";
+        $campaignName = 'msg_image';
         $wimage1 = time() . "_img_." . pathinfo($_FILES['wimage1']['name'], PATHINFO_EXTENSION);
         move_uploaded_file($_FILES['wimage1']['tmp_name'], "wimages/$wimage1");
-        $media_url = "https://shudhwhatsapp.in/wimages/$wimage1";
+        $media_url = "https://sendwasms.in//wimages/$wimage1";
         $media_name = $wimage1;
     }
 
     if ($_POST['radioTabTest'] == 2 && $_FILES['wimage2']['size'] > 0) {
         $media_type = "pdf";
+        $campaignName = 'msg_doc';
         $wpdf = time() . "_pdf_." . pathinfo($_FILES['wimage2']['name'], PATHINFO_EXTENSION);
         move_uploaded_file($_FILES['wimage2']['tmp_name'], "wpdf/$wpdf");
-        $media_url = "https://shudhwhatsapp.in/wpdf/$wpdf";
+        $media_url = "https://sendwasms.in//wpdf/$wpdf";
         $media_name = $wpdf;
     }
 
     if ($_POST['radioTabTest'] == 4 && $_FILES['kvf']['size'] > 0) {
         $media_type = "video";
+        $campaignName = 'msg_video';
         $wvideo = time() . "_video_." . pathinfo($_FILES['kvf']['name'], PATHINFO_EXTENSION);
         move_uploaded_file($_FILES['kvf']['tmp_name'], "wvideos/$wvideo");
-        $media_url = "https://shudhwhatsapp.in/wvideos/$wvideo";
+        $media_url = "https://sendwasms.in//wvideos/$wvideo";
         $media_name = $wvideo;
     }
 
@@ -66,14 +73,14 @@ if ($row1['wn'] >= $numbercount) {
         $mobileno = preg_split('/\r\n|\n|\r/', $str);
 
         // Function to send WhatsApp message via AiSensy API
-        function sendWhatsAppMessage($apiKey, $campaignName, $destination, $userName, $message, $media_url = null) {
+        function sendWhatsAppMessage($apiKey, $campaignName, $destination, $userName, $templateParams, $media_url = null) {
             $url = "https://backend.aisensy.com/campaign/t1/api/v2";
             $data = [
                 "apiKey" => $apiKey,
                 "campaignName" => $campaignName,
                 "destination" => $destination,
                 "userName" => $userName,
-                "templateParams" => [$message],
+                "templateParams" => $templateParams,
                 "tags" => [],
                 "attributes" => []
             ];
@@ -90,6 +97,11 @@ if ($row1['wn'] >= $numbercount) {
                     'content' => json_encode($data)
                 ]
             ];
+            // Print the payload for debugging
+            echo "<pre>";
+            print_r($data);
+            echo "</pre>";
+            
             $context  = stream_context_create($options);
             $result = file_get_contents($url, false, $context);
             return $result !== FALSE ? json_decode($result, true) : false;
@@ -97,7 +109,8 @@ if ($row1['wn'] >= $numbercount) {
 
         // Send messages
         foreach ($mobileno as $destination) {
-            $response = sendWhatsAppMessage('YOUR_API_KEY', 'YOUR_CAMPAIGN_NAME', $destination, $user_name, $message, $media_url);
+            $templateParams = [$message]; // Adjust template params based on your campaign needs
+            $response = sendWhatsAppMessage('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2M2YzNzc4NjRmNDFlMGU4YTY1ZjNiYyIsIm5hbWUiOiJORVcgTUFIQUtBTCBESiBTT1VORCA2NTE2IiwiYXBwTmFtZSI6IkFpU2Vuc3kiLCJjbGllbnRJZCI6IjY2M2YzNzc4NjRmNDFlMGU4YTY1ZjNhZiIsImFjdGl2ZVBsYW4iOiJCQVNJQ19NT05USExZIiwiaWF0IjoxNzE1NDE5MDAwfQ.3lk9G1cAELzIduqDg-P8vqEL2zFl6SNypz-PDX3IkV8', $campaignName, $destination, $user_name, $templateParams, $media_url);
             if (!$response) {
                 echo "Error sending message to $destination";
             }
